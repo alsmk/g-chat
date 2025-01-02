@@ -1,43 +1,29 @@
 pipeline {
-    agent { label 'ubuntu-latest' }
-    options {
-        timeout(time: 15, unit: 'MINUTES')
+    agent {
+        docker {
+            image 'ubuntu:latest'
+             args '-u root'
+        }
+    options{
+        timeout(time:4, unit:'minutes')
     }
     stages {
-        stage('Setup') {
-            steps {
+        stage('Set up the environment for using sudo'){
+            steps{
+                sh 'apt-get update'
+                sh 'apt-get install -y sudo' 
+                sh 'adduser jenkins --disabled-password' 
+                sh 'adduser jenkins sudo' 
+                sh 'echo "jenkins ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers' 
+            }
+        }
+        stage('install node'){
+            steps{
                 sh 'curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -'
                 sh 'sudo apt-get install -y nodejs'
             }
         }
-        stage('Install pnpm') {
-            steps {
-                sh 'npm install -g pnpm@^7'
-            }
-        }
-        stage('Install dependencies') {
-            steps {
-                sh 'pnpm install --frozen-lockfile'
-            }
-        }
-        stage('Pack for linux') {
-            steps {
-                sh 'rm -rf ./.github'
-                sh 'npm run pack:linux'
-            }
-        }
-        stage('Create debian package') {
-            steps {
-                sh 'npm run build:deb'
-                sh 'npm run build:deb-checksum'
-            }
-        }
-        stage('Upload binaries to GitHub release') {
-            steps {
-                withCredentials([string(credentialsId: 'github-token', variable: 'TOKEN')]) {
-                    sh 'curl -sL https://github.com/svenstaro/upload-release-action/releases/download/v2/upload-release-action.sh | bash -s -- -t $TOKEN -f "./dist/installers/*.*" -r $GIT_COMMIT'
-                }
-            }
-        }
+    }
+
     }
 }
