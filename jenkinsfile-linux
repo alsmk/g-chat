@@ -9,27 +9,16 @@ pipeline {
          timeout(time: 15, unit: 'MINUTES')
     }
     stages {
-        stage('Set up the environment for using sudo'){
-            steps{
-                sh 'apt-get update'
-                sh 'apt-get install -y sudo' 
-                // sh 'adduser jenkins --disabled-password' 
-                // sh 'adduser jenkins sudo' 
-                // sh 'echo "jenkins ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers' 
-            }
-        }
-        stage('install node'){
+        
+        stage('install node and dependencies'){
             steps{
                 sh 'curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -'
                 sh 'sudo apt-get install -y nodejs'
-            }
-        }
-
-        stage('install dependencies'){
-            steps{
                 sh 'npm install --frozen-lockfile'
             }
         }
+
+       
     }
     
 }
