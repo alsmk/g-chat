@@ -13,7 +13,7 @@ pipeline {
         stage('install node and dependencies'){
             steps{
                 sh 'apt-get update'
-                sh 'apt-get install -y curl'
+                sh 'apt-get install -y sudo curl'
                 sh 'curl --version'
                 sh 'curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -'
                 sh 'sudo apt-get install -y nodejs'
