@@ -20,6 +20,11 @@ pipeline {
                 sh 'npm install --frozen-lockfile'
             }
         }
+        stage('Pack for linux'){
+            steps{
+                sh 'npm run pack:linux'
+            }
+        }
 
        
     }
