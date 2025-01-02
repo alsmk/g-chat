@@ -4,10 +4,7 @@ pipeline {
         timeout(time: 15, unit: 'MINUTES')
     }
     stages {
-        stage('Checkout code') {
-            agent { label 'ubuntu-latest' }
-        }
-        stage('Setup node.js') {
+        stage('Setup') {
             steps {
                 sh 'curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -'
                 sh 'sudo apt-get install -y nodejs'
