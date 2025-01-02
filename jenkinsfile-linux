@@ -13,9 +13,9 @@ pipeline {
             steps{
                 sh 'apt-get update'
                 sh 'apt-get install -y sudo' 
-                sh 'adduser jenkins --disabled-password' 
-                sh 'adduser jenkins sudo' 
-                sh 'echo "jenkins ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers' 
+                // sh 'adduser jenkins --disabled-password' 
+                // sh 'adduser jenkins sudo' 
+                // sh 'echo "jenkins ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers' 
             }
         }
         stage('install node'){
