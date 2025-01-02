@@ -1,13 +1,11 @@
 pipeline {
-    agent { label 'ubuntu-20.04' }
+    agent { label 'ubuntu-latest' }
     options {
         timeout(time: 15, unit: 'MINUTES')
     }
     stages {
         stage('Checkout code') {
-            steps {
-                checkout scm
-            }
+            agent { label 'ubuntu-latest' }
         }
         stage('Setup node.js') {
             steps {
