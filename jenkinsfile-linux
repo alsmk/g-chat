@@ -4,6 +4,7 @@ pipeline {
             image 'ubuntu:latest'
              args '-u root'
         }
+    }
     options{
         timeout(time:4, unit:'minutes')
     }
@@ -24,6 +25,5 @@ pipeline {
             }
         }
     }
-
-    }
+    
 }
