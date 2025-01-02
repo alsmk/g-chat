@@ -6,7 +6,7 @@ pipeline {
         }
     }
     options{
-        timeout(time:4, unit:'minutes')
+        timeout(time:15, unit:'MINUTES')
     }
     stages {
         stage('Set up the environment for using sudo'){
