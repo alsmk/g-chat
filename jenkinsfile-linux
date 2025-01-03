@@ -23,16 +23,13 @@ pipeline {
         stage('Pack for linux'){
             steps{
                 sh 'npm run pack:linux'
-            }
-        }
-        stage('Create Debian Package'){
-            steps {
                 sh 'npm run build:deb'
                 sh 'npm run build:deb-checksum'
             }
         }
         
         
+
        
     }
     
