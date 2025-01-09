@@ -1,0 +1,53 @@
+pipeline {
+    agent {
+        label 'windows'
+    }
+    environment {
+        NODE_VERSION = '18.x'
+        PNPM_VERSION = '^7'
+        INNOSETUP_URL = 'https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe'
+    }
+    options {
+        timeout(time: 10, unit: 'MINUTES')
+    }
+    stages {
+        stage('Setup Node.js and other dependencies') {
+            steps {
+                script {
+                    bat "curl -o node-setup.msi https://nodejs.org/dist/v${env.NODE_VERSION}/node-v${env.NODE_VERSION}-x64.msi"
+                    bat "msiexec /i node-setup.msi /quiet"
+                    bat "npm install -g pnpm@${env.PNPM_VERSION}"
+                    bat "pnpm install --frozen-lockfile"
+                }
+            }
+        }
+       
+       
+        stage('Pack for Windows') {
+            steps {
+                bat "npm run pack:windows"
+            }
+        }
+        stage('Download & Install Inno Setup Installer') {
+            steps {
+                dir('windows') {
+                    bat "curl --max-time 30 --retry 3 -L -o innosetup.exe ${env.INNOSETUP_URL}"
+                    bat "innosetup.exe /SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL"
+                    // Here flags stands for
+                    // /SP-: Disables the "This will install..." startup prompt.
+                    // /VERYSILENT: Performs the installation silently without showing any GUI.
+                    // /SUPPRESSMSGBOXES: Suppresses any message boxes.
+                    // /NORESTART: Prevents the system from restarting after installation.
+                    // /NOCANCEL: Prevents the user from canceling the installation once started.
+                }
+            }
+        }
+        
+        stage('Create Installer') {
+            steps {
+                bat "npm run build:windows"
+            }
+        }
+        
+    }
+}
