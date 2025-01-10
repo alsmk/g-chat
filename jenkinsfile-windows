@@ -11,16 +11,17 @@ pipeline {
         stage('Install NVM if not Present') {
             steps {
                 powershell """
-                
-
                 # Check if NVM is installed
                 if (-Not (Get-Command nvm -ErrorAction SilentlyContinue)) {
                     # Check if the NVM installation directory exists
-                    if (-Not (Test-Path '${NVM_INSTALL_DIR}')) {
+                    if (Test-Path '${NVM_INSTALL_DIR}') {
+                        # Clear the directory
+                        Get-ChildItem -Path '${NVM_INSTALL_DIR}' -Recurse -Force | Remove-Item -Recurse -Force
+                        Write-Output "NVM installation directory cleared: ${NVM_INSTALL_DIR}"
+                    } else {
+                        # Create the directory
                         New-Item -ItemType Directory -Force -Path '${NVM_INSTALL_DIR}' | Out-Null
                         Write-Output "NVM installation directory created: ${NVM_INSTALL_DIR}"
-                    } else {
-                        Write-Output "NVM installation directory already exists: ${NVM_INSTALL_DIR}"
                     }
                     Write-Output "NVM is not installed. Installing now..."
 
