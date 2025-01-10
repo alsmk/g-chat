@@ -42,6 +42,8 @@ pipeline {
                 } else {
                     Write-Output "NVM is already installed."
                 }
+                # Refresh the environment to recognize the updated Path (uses refreshenv if installed via Chocolatey)
+                refreshenv
                 nvm install 18
                 nvm use 18
                 node --version
