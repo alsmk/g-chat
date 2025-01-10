@@ -1,56 +1,25 @@
 pipeline {
-    agent {
-        label 'windows-node'
+    agent { label 'windows-node'}
+    environment{
+         NVM_INSTALLER_URL = 'https://raw.githubusercontent.com/coreybutler/nvm-windows/main/nvm-setup.exe'
     }
-    environment {
-        NODE_VERSION = '18.16.0'
-        // PNPM_VERSION = '^7'
-        // INNOSETUP_URL = 'https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe'
-    }
-    options {
-        timeout(time: 10, unit: 'MINUTES')
-    }
-    stages {
-         
-        stage('Setup Node.js and other dependencies') {
-            steps {
-                 script {
-                    bat '''
-                        nvm install ${NODE_VERSION}
-                        nvm use ${NODE_VERSION}
-                        npm install -g pnpm@^7
-                        pnpm install --frozen-lockfile
-                    '''
+    stages{
+        stage('setup nvm'){
+            steps{
+                script {
+                     def nvmCheck = powershell(script: 'Get-Command nvm -ErrorAction SilentlyContinue', returnStatus: true)
+                    if (nvmCheck != 0) {
+                        echo 'NVM is not installed. Installing now...'
+                        powershell """
+                        Invoke-WebRequest -Uri '${env.NVM_INSTALLER_URL}' -OutFile 'nvm-setup.exe'
+                        Start-Process 'nvm-setup.exe' -ArgumentList '/SILENT' -Wait
+                        """
+                        echo 'NVM installed successfully.'
+                    } else {
+                        echo 'NVM is already installed.'
+                    }
                 }
             }
         }
-       
-       
-        stage('Pack for Windows') {
-            steps {
-                bat "npm run pack:windows"
-            }
-        }
-        stage('Download & Install Inno Setup Installer') {
-            steps {
-                dir('windows') {
-                    bat "curl --max-time 30 --retry 3 -L -o innosetup.exe ${env.INNOSETUP_URL}"
-                    bat "innosetup.exe /SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL"
-                    // Here flags stands for
-                    // /SP-: Disables the "This will install..." startup prompt.
-                    // /VERYSILENT: Performs the installation silently without showing any GUI.
-                    // /SUPPRESSMSGBOXES: Suppresses any message boxes.
-                    // /NORESTART: Prevents the system from restarting after installation.
-                    // /NOCANCEL: Prevents the user from canceling the installation once started.
-                }
-            }
-        }
-        
-        stage('Create Installer') {
-            steps {
-                bat "npm run build:windows"
-            }
-        }
-        
     }
 }
