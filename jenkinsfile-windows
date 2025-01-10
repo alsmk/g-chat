@@ -24,16 +24,16 @@ pipeline {
                     Write-Output "NVM is not installed. Installing now..."
 
                     # Download NVM
-                    Invoke-WebRequest -Uri \"""${NVM_URL}\""" -OutFile \"\"\$env:TEMP\\nvm-setup.zip\"\"\"
+                    Invoke-WebRequest -Uri \"${NVM_URL}\" -OutFile \"\$env:TEMP\\nvm-setup.zip\"
 
                     # Unzip the downloaded file
                     Add-Type -AssemblyName System.IO.Compression.FileSystem
-                    [System.IO.Compression.ZipFile]::ExtractToDirectory(\"\"\$env:TEMP\\nvm-setup.zip\"\", \"\"${NVM_INSTALL_DIR}\"\")
+                    [System.IO.Compression.ZipFile]::ExtractToDirectory(\"\$env:TEMP\\nvm-setup.zip\", \"${NVM_INSTALL_DIR}\")
 
                     # Add NVM to the user-level Path
                     [Environment]::SetEnvironmentVariable(
                         "Path",
-                        \"\"\$([Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::User));${NVM_INSTALL_DIR}\"\", 
+                        \"\$([Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::User));${NVM_INSTALL_DIR}\",
                         [System.EnvironmentVariableTarget]::User
                     )
                     Write-Output "NVM installed and user-level Path updated."
