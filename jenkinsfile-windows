@@ -1,48 +1,46 @@
 pipeline {
-    agent { label 'windows-node' }
+    agent {
+        label 'windows-node'
+    }
     environment {
-        NVM_VERSION = "1.2.0"
-        NVM_URL = "https://github.com/coreybutler/nvm-windows/releases/download/${NVM_VERSION}/nvm-setup.zip"
-        NVM_INSTALL_DIR = "C:\\nvm"
+        NVM_VERSION = '1.2.0'
+        NVM_URL = 'https://github.com/coreybutler/nvm-windows/releases/download/1.2.0/nvm-setup.zip'
+        NVM_INSTALL_DIR = 'C:\\nvm'
     }
     stages {
         stage('Install NVM if not Present') {
             steps {
-                script {
-                    powershell """
-                    # Ensure the installation directory exists
-                    if (-Not (Test-Path '${env.NVM_INSTALL_DIR}')) {
-                        Write-Host 'NVM installation directory does not exist. Creating it now...'
-                        New-Item -ItemType Directory -Force -Path '${env.NVM_INSTALL_DIR}' | Out-Null
-                        Write-Host 'Directory created: ${env.NVM_INSTALL_DIR}'
-                    } else {
-                        Write-Host 'NVM installation directory already exists: ${env.NVM_INSTALL_DIR}'
-                    }
-
-                    # Check if NVM is installed
-                    if (-Not (Get-Command nvm -ErrorAction SilentlyContinue)) {
-                        Write-Host 'NVM is not installed. Installing now...'
-
-                        # Define NVM variables
-                        \$nvmVersion = '${env.NVM_VERSION}'
-                        \$nvmUrl = '${env.NVM_URL}'
-
-                        # Download NVM
-                        Invoke-WebRequest -Uri \$nvmUrl -OutFile "\$env:TEMP\\nvm-setup.zip"
-
-                        # Unzip the downloaded file
-                        Add-Type -AssemblyName System.IO.Compression.FileSystem
-                        [System.IO.Compression.ZipFile]::ExtractToDirectory("\$env:TEMP\\nvm-setup.zip", '${env.NVM_INSTALL_DIR}')
-
-                        # Add NVM to the system PATH
-                        [Environment]::SetEnvironmentVariable("Path", "\$([Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::Machine));${env.NVM_INSTALL_DIR}", [System.EnvironmentVariableTarget]::Machine)
-
-                        Write-Host 'NVM installed successfully.'
-                    } else {
-                        Write-Host 'NVM is already installed.'
-                    }
-                    """
+                powershell """
+                # Check if the NVM installation directory exists
+                if (-Not (Test-Path '${NVM_INSTALL_DIR}')) {
+                    New-Item -ItemType Directory -Force -Path '${NVM_INSTALL_DIR}' | Out-Null
+                    Write-Output "NVM installation directory created: ${NVM_INSTALL_DIR}"
+                } else {
+                    Write-Output "NVM installation directory already exists: ${NVM_INSTALL_DIR}"
                 }
+
+                # Check if NVM is installed
+                if (-Not (Get-Command nvm -ErrorAction SilentlyContinue)) {
+                    Write-Output "NVM is not installed. Installing now..."
+
+                    # Download NVM
+                    Invoke-WebRequest -Uri '${NVM_URL}' -OutFile "$env:TEMP\\nvm-setup.zip"
+
+                    # Unzip the downloaded file
+                    Add-Type -AssemblyName System.IO.Compression.FileSystem
+                    [System.IO.Compression.ZipFile]::ExtractToDirectory("$env:TEMP\\nvm-setup.zip", '${NVM_INSTALL_DIR}')
+
+                    # Add NVM to the user-level Path
+                    [Environment]::SetEnvironmentVariable(
+                        "Path",
+                        "$([Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::User));${NVM_INSTALL_DIR}",
+                        [System.EnvironmentVariableTarget]::User
+                    )
+                    Write-Output "NVM installed and user-level Path updated."
+                } else {
+                    Write-Output "NVM is already installed."
+                }
+                """
             }
         }
     }
