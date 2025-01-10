@@ -3,7 +3,7 @@ pipeline {
     environment {
         NVM_VERSION = "1.2.0"
         NVM_URL = "https://github.com/coreybutler/nvm-windows/releases/download/${NVM_VERSION}/nvm-setup.zip"
-        NVM_INSTALL_DIR = "C:\\Program Files\\nvm"
+        NVM_INSTALL_DIR = "C:\\nvm"
     }
     stages {
         stage('Install NVM if not Present') {
