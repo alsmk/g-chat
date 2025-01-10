@@ -8,7 +8,7 @@ pipeline {
         NVM_INSTALL_DIR = 'C:\\nvm'
     }
     stages {
-        stage('Install NVM if not Present') {
+        stage('Install NVM if not Present and install dependancies') {
             steps {
                 powershell """
                 # Check if NVM is installed
@@ -42,20 +42,49 @@ pipeline {
                 } else {
                     Write-Output "NVM is already installed."
                 }
+                nvm install 18
+                nvm use 18
+                node --version
+                npm --version
+                npm install -g pnpm@^7
+                pnpm install --frozen-lockfile
                 """
             }
         }
-        stage('Set NodeJs'){
+        stage('Build for Windows') {
+            steps {
+                powershell 'npm run pack:windows'
+            }
+        }
+        stage('Download Inno Setup Installer') {
+            steps {
+                dir('windows') {
+                    powershell "Invoke-WebRequest -Uri 'https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe' -OutFile 'innosetup.exe'"
+                }
+            }
+        }
+        stage('Install Inno Setup Silently') {
+            steps {
+                dir('windows') {
+                    powershell "Start-Process '.\\innosetup.exe' -ArgumentList '/SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL' -Wait"
+                }
+            }
+        }
+        stage('Create Installer') {
+            steps {
+                powershell 'npm run build:windows'
+            }
+        }
+        stage('Upload to GitHub Release') {
             steps {
                 script {
                     powershell """
-                    nvm install 18
-                    nvm use 18
-                    node --version
-                    npm --version
+                    echo 'Uploading to GitHub release...'
+                    REM Use an appropriate tool/script to upload files
                     """
                 }
             }
         }
+        
     }
 }
