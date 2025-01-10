@@ -8,85 +8,37 @@ pipeline {
         NVM_INSTALL_DIR = 'C:\\nvm'
     }
     stages {
-        stage('Install NVM if not Present and install dependancies') {
+        stage('Install NVM if not Present') {
             steps {
                 powershell """
-                # Check if NVM is installed
-                if (-Not (Get-Command nvm -ErrorAction SilentlyContinue)) {
+                Start-Process powershell -ArgumentList '-NoProfile -Command {
                     # Check if the NVM installation directory exists
-                    if (Test-Path '${NVM_INSTALL_DIR}') {
-                        # Clear the directory
-                        Get-ChildItem -Path '${NVM_INSTALL_DIR}' -Recurse -Force | Remove-Item -Recurse -Force
-                        Write-Output "NVM installation directory cleared: ${NVM_INSTALL_DIR}"
-                    } else {
-                        # Create the directory
-                        New-Item -ItemType Directory -Force -Path '${NVM_INSTALL_DIR}' | Out-Null
-                        Write-Output "NVM installation directory created: ${NVM_INSTALL_DIR}"
+                    if (-Not (Test-Path "${env.NVM_INSTALL_DIR}")) {
+                        New-Item -ItemType Directory -Force -Path "${env.NVM_INSTALL_DIR}"
                     }
-                    Write-Output "NVM is not installed. Installing now..."
-
-                    # Download NVM
-                    Invoke-WebRequest -Uri \"${NVM_URL}\" -OutFile \"\$env:TEMP\\nvm-setup.zip\"
-
-                    # Unzip the downloaded file
-                    Add-Type -AssemblyName System.IO.Compression.FileSystem
-                    [System.IO.Compression.ZipFile]::ExtractToDirectory(\"\$env:TEMP\\nvm-setup.zip\", \"${NVM_INSTALL_DIR}\")
-
-                    # Add NVM to the user-level Path
-                    [Environment]::SetEnvironmentVariable(
-                        "Path",
-                        \"\$([Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::User));${NVM_INSTALL_DIR}\",
-                        [System.EnvironmentVariableTarget]::User
-                    )
-                    Write-Output "NVM installed and user-level Path updated."
-                } else {
-                    Write-Output "NVM is already installed."
-                }
-                # Refresh the environment to recognize the updated Path (uses refreshenv if installed via Chocolatey)
-                refreshenv
-                nvm install 18
-                nvm use 18
-                node --version
-                npm --version
-                npm install -g pnpm@^7
-                pnpm install --frozen-lockfile
+                    # Check if NVM is installed
+                    if (-Not (Get-Command nvm -ErrorAction SilentlyContinue)) {
+                        # Download NVM
+                        Invoke-WebRequest -Uri "${env.NVM_URL}" -OutFile "$env:TEMP\\nvm-setup.zip"
+                        
+                        # Unzip the downloaded file
+                        Add-Type -AssemblyName System.IO.Compression.FileSystem
+                        [System.IO.Compression.ZipFile]::ExtractToDirectory("$env:TEMP\\nvm-setup.zip", "${env.NVM_INSTALL_DIR}")
+                        
+                        # Add NVM to the machine-level Path
+                        [Environment]::SetEnvironmentVariable("Path", "$([Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::Machine));${env.NVM_INSTALL_DIR}", [System.EnvironmentVariableTarget]::Machine)
+                    }
+                }' -Verb RunAs
                 """
             }
         }
-        stage('Build for Windows') {
+        stage('Use NVM to Install Node') {
             steps {
-                powershell 'npm run pack:windows'
+                powershell """
+                # Start a new PowerShell session to make sure NVM is available
+                Start-Process powershell -ArgumentList '-NoProfile -Command { nvm install 18 }' -Wait -Verb RunAs
+                """
             }
         }
-        stage('Download Inno Setup Installer') {
-            steps {
-                dir('windows') {
-                    powershell "Invoke-WebRequest -Uri 'https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe' -OutFile 'innosetup.exe'"
-                }
-            }
-        }
-        stage('Install Inno Setup Silently') {
-            steps {
-                dir('windows') {
-                    powershell "Start-Process '.\\innosetup.exe' -ArgumentList '/SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL' -Wait"
-                }
-            }
-        }
-        stage('Create Installer') {
-            steps {
-                powershell 'npm run build:windows'
-            }
-        }
-        stage('Upload to GitHub Release') {
-            steps {
-                script {
-                    powershell """
-                    echo 'Uploading to GitHub release...'
-                    REM Use an appropriate tool/script to upload files
-                    """
-                }
-            }
-        }
-        
     }
 }
