@@ -1,25 +1,45 @@
 pipeline {
-    agent { label 'windows-node'}
-    environment{
-         NVM_INSTALLER_URL = 'https://raw.githubusercontent.com/coreybutler/nvm-windows/main/nvm-setup.exe'
+    agent { label 'windows-node' }
+    environment {
+        NVM_VERSION = "1.2.0"
+        NVM_URL = "https://github.com/coreybutler/nvm-windows/releases/download/${NVM_VERSION}/nvm-setup.zip"
+        NVM_INSTALL_DIR = "C:\\Program Files\\nvm"
     }
-    stages{
-        stage('setup nvm'){
-            steps{
+    stages {
+        stage('Install NVM if not Present') {
+            steps {
                 script {
-                     def nvmCheck = powershell(script: 'Get-Command nvm -ErrorAction SilentlyContinue', returnStatus: true)
-                    if (nvmCheck != 0) {
-                        echo 'NVM is not installed. Installing now...'
-                        powershell """
-                        Invoke-WebRequest -Uri '${env.NVM_INSTALLER_URL}' -OutFile 'nvm-setup.exe'
-                        Start-Process 'nvm-setup.exe' -ArgumentList '/SILENT' -Wait
-                        """
-                        echo 'NVM installed successfully.'
+                    powershell """
+                    # Check if NVM is installed
+                    if (-Not (Get-Command nvm -ErrorAction SilentlyContinue)) {
+                        Write-Host 'NVM is not installed. Installing now...'
+
+                        # Define NVM variables
+                        \$nvmVersion = '${env.NVM_VERSION}'
+                        \$nvmUrl = '${env.NVM_URL}'
+                        \$nvmInstallDir = '${env.NVM_INSTALL_DIR}'
+
+                        # Download NVM
+                        Invoke-WebRequest -Uri \$nvmUrl -OutFile "\$env:TEMP\\nvm-setup.zip"
+
+                        # Create the installation directory
+                        New-Item -ItemType Directory -Force -Path \$nvmInstallDir | Out-Null
+
+                        # Unzip the downloaded file
+                        Add-Type -AssemblyName System.IO.Compression.FileSystem
+                        [System.IO.Compression.ZipFile]::ExtractToDirectory("\$env:TEMP\\nvm-setup.zip", \$nvmInstallDir)
+
+                        # Add NVM to the system PATH
+                        [Environment]::SetEnvironmentVariable("Path", "\$([Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::Machine));\$nvmInstallDir", [System.EnvironmentVariableTarget]::Machine)
+
+                        Write-Host 'NVM installed successfully.'
                     } else {
-                        echo 'NVM is already installed.'
+                        Write-Host 'NVM is already installed.'
                     }
+                    """
                 }
             }
         }
+        
     }
 }
