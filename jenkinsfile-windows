@@ -12,12 +12,21 @@ pipeline {
             steps {
                 powershell """
                 Start-Process powershell -ArgumentList '-NoProfile -Command {
-                    # Check if the NVM installation directory exists
-                    if (-Not (Test-Path "${env.NVM_INSTALL_DIR}")) {
-                        New-Item -ItemType Directory -Force -Path "${env.NVM_INSTALL_DIR}"
-                    }
                     # Check if NVM is installed
                     if (-Not (Get-Command nvm -ErrorAction SilentlyContinue)) {
+                        Write-Output "NVM is not installed. Installing now..."
+
+                        # Check if the NVM installation directory exists
+                        if (Test-Path "${env.NVM_INSTALL_DIR}") {
+                            # Empty the directory if it exists
+                            Remove-Item -Recurse -Force "${env.NVM_INSTALL_DIR}\\*" 
+                            Write-Output "NVM installation directory cleared: ${env.NVM_INSTALL_DIR}"
+                        } else {
+                            # Create the directory if it doesn't exist
+                            New-Item -ItemType Directory -Force -Path "${env.NVM_INSTALL_DIR}"
+                            Write-Output "NVM installation directory created: ${env.NVM_INSTALL_DIR}"
+                        }
+
                         # Download NVM
                         Invoke-WebRequest -Uri "${env.NVM_URL}" -OutFile "$env:TEMP\\nvm-setup.zip"
                         
@@ -27,6 +36,9 @@ pipeline {
                         
                         # Add NVM to the machine-level Path
                         [Environment]::SetEnvironmentVariable("Path", "$([Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::Machine));${env.NVM_INSTALL_DIR}", [System.EnvironmentVariableTarget]::Machine)
+                        Write-Output "NVM installed and machine-level Path updated."
+                    } else {
+                        Write-Output "NVM is already installed."
                     }
                 }' -Verb RunAs
                 """
