@@ -3,38 +3,42 @@ pipeline {
     stages {
         stage('Setup NVM') {
             steps {
-                powershell '''
-                    $nvmDir = "C:\\nvm"
-                    $nodeDir = "$nvmDir\\nodejs"
-                    $nvmExe = "$nvmDir\\nvm.exe"
+                script{
 
-                    # Create directories
-                    if (!(Test-Path $nvmDir)) { New-Item -ItemType Directory -Path $nvmDir }
-                    if (!(Test-Path $nodeDir)) { New-Item -ItemType Directory -Path $nodeDir }
+                
+                    powershell '''
+                        $nvmDir = "C:\\nvm"
+                        $nodeDir = "$nvmDir\\nodejs"
+                        $nvmExe = "$nvmDir\\nvm.exe"
 
-                    # Download NVM setup if not exists
-                    $nvmVersion = "1.2.0"
-                    $nvmUrl = "https://github.com/coreybutler/nvm-windows/releases/download/$nvmVersion/nvm-setup.zip"
-                    $zipPath = "$env:TEMP\\nvm-setup.zip"
-                    if (!(Test-Path $nvmExe)) {
-                        Invoke-WebRequest -Uri $nvmUrl -OutFile $zipPath
-                        Add-Type -AssemblyName System.IO.Compression.FileSystem
-                        [System.IO.Compression.ZipFile]::ExtractToDirectory($zipPath, $nvmDir)
-                        Remove-Item $zipPath
-                    }
+                        # Create directories
+                        if (!(Test-Path $nvmDir)) { New-Item -ItemType Directory -Path $nvmDir }
+                        if (!(Test-Path $nodeDir)) { New-Item -ItemType Directory -Path $nodeDir }
 
-                    # Set environment variables for current user
-                    [Environment]::SetEnvironmentVariable("Path", "$env:Path;$nvmDir", [EnvironmentVariableTarget]::User)
-                    [Environment]::SetEnvironmentVariable("NVM_HOME", $nvmDir, [EnvironmentVariableTarget]::User)
-                    [Environment]::SetEnvironmentVariable("NVM_SYMLINK", $nodeDir, [EnvironmentVariableTarget]::User)
+                        # Download NVM setup if not exists
+                        $nvmVersion = "1.2.0"
+                        $nvmUrl = "https://github.com/coreybutler/nvm-windows/releases/download/$nvmVersion/nvm-setup.zip"
+                        $zipPath = "$env:TEMP\\nvm-setup.zip"
+                        if (!(Test-Path $nvmExe)) {
+                            Invoke-WebRequest -Uri $nvmUrl -OutFile $zipPath
+                            Add-Type -AssemblyName System.IO.Compression.FileSystem
+                            [System.IO.Compression.ZipFile]::ExtractToDirectory($zipPath, $nvmDir)
+                            Remove-Item $zipPath
+                        }
 
-                    # Test NVM
-                    if (Test-Path $nvmExe) {
-                        & $nvmExe version
-                    } else {
-                        Write-Output "NVM installation failed."
-                    }
-                '''
+                        # Set environment variables for current user
+                        [Environment]::SetEnvironmentVariable("Path", "$env:Path;$nvmDir", [EnvironmentVariableTarget]::User)
+                        [Environment]::SetEnvironmentVariable("NVM_HOME", $nvmDir, [EnvironmentVariableTarget]::User)
+                        [Environment]::SetEnvironmentVariable("NVM_SYMLINK", $nodeDir, [EnvironmentVariableTarget]::User)
+
+                        # Test NVM
+                        if (Test-Path $nvmExe) {
+                            & $nvmExe version
+                        } else {
+                            Write-Output "NVM installation failed."
+                        }
+                    '''
+                }
             }
         }
     }
