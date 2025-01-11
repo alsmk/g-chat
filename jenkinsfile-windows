@@ -27,7 +27,7 @@ pipeline {
                         $nvmVersion = "1.2.0"
                         Write-Output "Downloading the nvm version $nvmVersion"
                         $nvmUrl = "https://github.com/coreybutler/nvm-windows/releases/download/$nvmVersion/nvm-setup.zip"
-                        Write-Output "Downloading nvm from $nvmUrl and save to current directory"
+                        Write-Output "Downloading nvm from $nvmUrl and save to current directory, Please wait......."
                         Invoke-WebRequest -Uri $nvmUrl -OutFile ".\\nvm-setup.zip"
                         Write-Output "Extracting the nvm-setup.zip"
                         Expand-Archive -Path ".\\nvm-setup.zip" -DestinationPath ".\\"
@@ -37,7 +37,14 @@ pipeline {
                         Get-ChildItem
                     }
                     Write-Output "We have nvm-setup.exe in the directory"
-                    
+                    Write-Output "Installing NVM to the current directory...PLEASE WAIT"
+                    .\\nvm-setup.exe /dir=".\\" /y
+                    Write-Output "NVM installed successfully"
+                    Write-Output "Printing the version of nvm"
+                    nvm version
+
+
+
                    
                 '''
                 
