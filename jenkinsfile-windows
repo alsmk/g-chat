@@ -36,7 +36,7 @@ pipeline {
 
                         # Test NVM
                         if (Test-Path $nvmExe) {
-                            & $nvmExe version
+                            & $nvmExe --version
                         } else {
                             Write-Output "NVM installation failed."
                         }
