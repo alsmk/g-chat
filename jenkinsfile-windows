@@ -1,69 +1,40 @@
 pipeline {
-    agent {
-        node {
-            label 'windows-node'
-        }
-    }
+    agent any
     stages {
-        stage('Check and Install NVM') {
+        stage('Setup NVM') {
             steps {
-                script {
-                    powershell '''
-                        # Define a temporary PowerShell script to elevate privileges
-                        $scriptContent = @"
-                        param(
-                            [string]$nvmVersion = "1.2.0",
-                            [string]$nvmInstallDir = "C:\\Program Files\\nodejs"
-                        )
+                powershell '''
+                    $nvmDir = "C:\\nvm"
+                    $nodeDir = "$nvmDir\\nodejs"
+                    $nvmExe = "$nvmDir\\nvm.exe"
 
-                        # Set the download URL
-                        $nvmUrl = "https://github.com/coreybutler/nvm-windows/releases/download/$nvmVersion/nvm-setup.zip"
+                    # Create directories
+                    if (!(Test-Path $nvmDir)) { New-Item -ItemType Directory -Path $nvmDir }
+                    if (!(Test-Path $nodeDir)) { New-Item -ItemType Directory -Path $nodeDir }
 
-                        # Check if NVM is already installed
-                        if (Test-Path "$nvmInstallDir\\nvm.exe") {
-                            Write-Output "NVM is already installed."
-                            & "$nvmInstallDir\\nvm.exe" version
-                        } else {
-                            # Download NVM
-                            Invoke-WebRequest -Uri $nvmUrl -OutFile "$env:TEMP\\nvm-setup.zip"
+                    # Download NVM setup if not exists
+                    $nvmVersion = "1.2.0"
+                    $nvmUrl = "https://github.com/coreybutler/nvm-windows/releases/download/$nvmVersion/nvm-setup.zip"
+                    $zipPath = "$env:TEMP\\nvm-setup.zip"
+                    if (!(Test-Path $nvmExe)) {
+                        Invoke-WebRequest -Uri $nvmUrl -OutFile $zipPath
+                        Add-Type -AssemblyName System.IO.Compression.FileSystem
+                        [System.IO.Compression.ZipFile]::ExtractToDirectory($zipPath, $nvmDir)
+                        Remove-Item $zipPath
+                    }
 
-                            # Create or clear the installation directory
-                            if (Test-Path $nvmInstallDir) {
-                                Remove-Item -Recurse -Force $nvmInstallDir
-                            }
-                            New-Item -ItemType Directory -Force -Path $nvmInstallDir | Out-Null
+                    # Set environment variables for current user
+                    [Environment]::SetEnvironmentVariable("Path", "$env:Path;$nvmDir", [EnvironmentVariableTarget]::User)
+                    [Environment]::SetEnvironmentVariable("NVM_HOME", $nvmDir, [EnvironmentVariableTarget]::User)
+                    [Environment]::SetEnvironmentVariable("NVM_SYMLINK", $nodeDir, [EnvironmentVariableTarget]::User)
 
-                            # Unzip the downloaded file
-                            Add-Type -AssemblyName System.IO.Compression.FileSystem
-                            [System.IO.Compression.ZipFile]::ExtractToDirectory("$env:TEMP\\nvm-setup.zip", $nvmInstallDir)
-
-                            # Add NVM to the system PATH
-                            [Environment]::SetEnvironmentVariable("Path", "$([Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::Machine));$nvmInstallDir", [System.EnvironmentVariableTarget]::Machine)
-
-                            # Clean up
-                            Remove-Item -Force "$env:TEMP\\nvm-setup.zip"
-
-                            # Verify installation
-                            if (Test-Path "$nvmInstallDir\\nvm.exe") {
-                                Write-Output "NVM installed successfully."
-                                & "$nvmInstallDir\\nvm.exe" version
-                            } else {
-                                Write-Output "NVM installation failed."
-                            }
-                        }
-                        "@
-
-                        # Save the script to a temporary file
-                        $scriptPath = "$env:TEMP\\install-nvm.ps1"
-                        $scriptContent | Out-File -FilePath $scriptPath -Encoding UTF8
-
-                        # Run the script as an elevated process
-                        Start-Process powershell.exe -ArgumentList "-File `"$scriptPath`"" -Verb RunAs -Wait
-
-                        # Remove the temporary script file
-                        Remove-Item -Force $scriptPath
-                    '''
-                }
+                    # Test NVM
+                    if (Test-Path $nvmExe) {
+                        & $nvmExe version
+                    } else {
+                        Write-Output "NVM installation failed."
+                    }
+                '''
             }
         }
     }
