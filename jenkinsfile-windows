@@ -23,8 +23,21 @@ pipeline {
                         Write-Output "nvm-setup.exe exists"
                     } else {
                         Write-Output "nvm-setup.exe does not exist "
-                        
+                        Write-Output "Downloading nvm-setup.exe"
+                        $nvmVersion = "1.2.0"
+                        Write-Output "Downloading the nvm version $nvmVersion"
+                        $nvmUrl = "https://github.com/coreybutler/nvm-windows/releases/download/$nvmVersion/nvm-setup.zip"
+                        Write-Output "Downloading nvm from $nvmUrl and save to current directory"
+                        Invoke-WebRequest -Uri $nvmUrl -OutFile ".\\nvm-setup.zip"
+                        Write-Output "Extracting the nvm-setup.zip"
+                        Expand-Archive -Path ".\\nvm-setup.zip" -DestinationPath ".\\"
+                        Write-Output "Deleting the nvm-setup.zip"
+                        Remove-Item ".\\nvm-setup.zip"
+                        Write-Output "nvm-setup.exe downloaded and extracted Printing the content of the directory"
+                        Get-ChildItem
                     }
+                    Write-Output "We have nvm-setup.exe in the directory"
+                    
                    
                 '''
                 
