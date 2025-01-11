@@ -5,13 +5,15 @@ pipeline {
         stage('Setup NVM') {
             steps {
                 powershell 'Write-Output "setting up NVM directory"'
-                $nvmDir = "$env:USERPROFILE\\AppData\\Roaming\\nvm"
-                powershell 'Write-Output "checking if NVM directory exists"'
-                if (!(Test-Path $nvmDir)) {
-                    powershell 'Write-Output "NVM directory does not exist, creating it"'
-                    New-Item -ItemType Directory -Force -Path $nvmDir
-                    poweshell 'Write-Output "NVM directory created the whole path of the directory is $nvmDir"'
-                }
+                powershell '''
+                    $nvmDir = "$env:USERPROFILE\\AppData\\Roaming\\nvm"
+                    Write-Output "checking if NVM directory exists"
+                    if (!(Test-Path $nvmDir)) {
+                        Write-Output "NVM directory does not exist, creating it"
+                        New-Item -ItemType Directory -Force -Path $nvmDir
+                        Write-Output "NVM directory created the whole path of the directory is $nvmDir"
+                    }
+                '''
                 
             
             }
