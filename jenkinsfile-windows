@@ -1,53 +1,66 @@
 pipeline {
     agent {
-        label 'windows-node'
-    }
-    environment {
-        NODE_VERSION = '18.x'
-        PNPM_VERSION = '^7'
-        INNOSETUP_URL = 'https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe'
-    }
-    options {
-        timeout(time: 10, unit: 'MINUTES')
+        node {
+            label 'windows-node'
+        }
     }
     stages {
-        stage('Setup Node.js and other dependencies') {
+        stage('Check and Install NVM') {
             steps {
                 script {
-                    bat "curl -o node-setup.msi https://nodejs.org/dist/v${env.NODE_VERSION}/node-v${env.NODE_VERSION}-x64.msi"
-                    bat "msiexec /i node-setup.msi /quiet"
-                    bat "npm install -g pnpm@${env.PNPM_VERSION}"
-                    bat "pnpm install --frozen-lockfile"
+                    powershell '''
+                        # Run the script with administrative privileges
+                        $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
+                        $principal = New-Object Security.Principal.WindowsPrincipal($currentUser)
+                        if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+                            Write-Output "This script requires administrator privileges."
+                            exit 1
+                        }
+
+                        # Define the NVM version
+                        $nvmVersion = "1.2.0"
+
+                        # Set the installation directory
+                        $nvmInstallDir = "C:\\Program Files\\nodejs"
+
+                        # Check if NVM is already installed
+                        if (Test-Path "$nvmInstallDir\\nvm.exe") {
+                            Write-Output "NVM is already installed."
+                            & "$nvmInstallDir\\nvm.exe" version
+                        } else {
+                            # Set the download URL
+                            $nvmUrl = "https://github.com/coreybutler/nvm-windows/releases/download/$nvmVersion/nvm-setup.zip"
+
+                            # Download NVM
+                            Invoke-WebRequest -Uri $nvmUrl -OutFile "$env:TEMP\\nvm-setup.zip"
+
+                            # Create the installation directory or clear it if it exists
+                            if (Test-Path $nvmInstallDir) {
+                                Remove-Item -Recurse -Force $nvmInstallDir
+                            }
+                            New-Item -ItemType Directory -Force -Path $nvmInstallDir | Out-Null
+
+                            # Unzip the downloaded file
+                            Add-Type -AssemblyName System.IO.Compression.FileSystem
+                            [System.IO.Compression.ZipFile]::ExtractToDirectory("$env:TEMP\\nvm-setup.zip", $nvmInstallDir)
+
+                            # Add NVM to the system PATH
+                            [Environment]::SetEnvironmentVariable("Path", "$([Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::Machine));$nvmInstallDir", [System.EnvironmentVariableTarget]::Machine)
+
+                            # Clean up
+                            Remove-Item -Force "$env:TEMP\\nvm-setup.zip"
+
+                            # Verify the installation
+                            if (Test-Path "$nvmInstallDir\\nvm.exe") {
+                                Write-Output "NVM installed successfully."
+                                & "$nvmInstallDir\\nvm.exe" version
+                            } else {
+                                Write-Output "NVM installation failed."
+                            }
+                        }
+                    '''
                 }
             }
         }
-       
-       
-        stage('Pack for Windows') {
-            steps {
-                bat "npm run pack:windows"
-            }
-        }
-        stage('Download & Install Inno Setup Installer') {
-            steps {
-                dir('windows') {
-                    bat "curl --max-time 30 --retry 3 -L -o innosetup.exe ${env.INNOSETUP_URL}"
-                    bat "innosetup.exe /SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL"
-                    // Here flags stands for
-                    // /SP-: Disables the "This will install..." startup prompt.
-                    // /VERYSILENT: Performs the installation silently without showing any GUI.
-                    // /SUPPRESSMSGBOXES: Suppresses any message boxes.
-                    // /NORESTART: Prevents the system from restarting after installation.
-                    // /NOCANCEL: Prevents the user from canceling the installation once started.
-                }
-            }
-        }
-        
-        stage('Create Installer') {
-            steps {
-                bat "npm run build:windows"
-            }
-        }
-        
     }
 }
