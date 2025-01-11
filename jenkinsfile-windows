@@ -15,19 +15,45 @@ pipeline {
                     }
                     Write-Output "moving to NVM directory"
                     Set-Location $nvmDir
-                    Write-Output "Make the directory empty"
-                    Remove-Item * -Recurse -Force
-                    Write-Output "Installing nvm in this directory"
-                    Write-Output "Defining the nvm version"
-                    $nvmVersion = "1.2.0"
-                    Write-Output "Downloading the nvm version $nvmVersion"
-                    $nvmUrl = "https://github.com/coreybutler/nvm-windows/releases/download/$nvmVersion/nvm-setup.zip"
-                    Write-Output "Downloading nvm from $nvmUrl and save the zip file in the current directory"
-                    Invoke-WebRequest -Uri $nvmUrl -OutFile "nvm-setup.zip"
-                    Write-Output "Extracting the zip file"
-                    Expand-Archive -Path "nvm-setup.zip" -DestinationPath .
-                    Write-Output "Printing all the files in the directory"
-                    Get-ChildItem
+
+
+
+                    Write-Output "Checking is there any thing called nvm-setup.exe"
+                    if (Test-Path ".\\nvm-setup.exe") {
+                        Write-Output "nvm-setup.exe exists"
+                    } else {
+                        Write-Output "nvm-setup.exe does not exist "
+                        Write-Output "Installing Process started......"
+                        Write-Output "Installing nvm in this directory"
+                        Write-Output "Defining the nvm version"
+                        $nvmVersion = "1.2.0"
+                        Write-Output "Downloading the nvm version $nvmVersion"
+                        $nvmUrl = "https://github.com/coreybutler/nvm-windows/releases/download/$nvmVersion/nvm-setup.zip"
+                        Write-Output "Downloading nvm from $nvmUrl and save the zip file in the current directory"
+                        Invoke-WebRequest -Uri $nvmUrl -OutFile "nvm-setup.zip"
+                        Write-Output "Extracting the zip file"
+                        Expand-Archive -Path "nvm-setup.zip" -DestinationPath .
+                        Write-Output "Printing all the files in the directory"
+                        Get-ChildItem
+
+
+                       
+
+                    }
+                    
+                 
+                    Write-Output "Checking if nvm is installed"
+                    if (Test-Path ".\\nvm.exe") {
+                        Write-Output "nvm is installed"
+                    } else {
+                        Write-Output "nvm is not installed"
+                        Write-Output "Installing nvm"
+                        
+                        .\nvm-setup.exe /dir="."
+                        Write-Output "Verifying the installation"
+                    }
+                    Write-Output "Priniting the nvm version"
+                    .\nvm.exe version
                     
                     
 
