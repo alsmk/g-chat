@@ -1,47 +1,19 @@
 pipeline {
     agent { label 'windows-node' }
+
     stages {
         stage('Setup NVM') {
             steps {
-                script {
-                    powershell '''
-                        $nvmDir = "C:\\nvm"
-                        $nodeDir = "$nvmDir\\nodejs"
-                        $nvmExe = "$nvmDir\\nvm.exe"
-
-                        # Delete existing nvmDir if it exists
-                        if (Test-Path $nvmDir) {
-                            Write-Output "Directory $nvmDir already exists. Deleting..."
-                            Remove-Item -Recurse -Force $nvmDir
-                        }
-                        
-                        # Create fresh directories
-                        New-Item -ItemType Directory -Path $nvmDir | Out-Null
-                        New-Item -ItemType Directory -Path $nodeDir | Out-Null
-
-                        # Download NVM setup
-                        $nvmVersion = "1.2.0"
-                        $nvmUrl = "https://github.com/coreybutler/nvm-windows/releases/download/$nvmVersion/nvm-setup.zip"
-                        $zipPath = "$env:TEMP\\nvm-setup.zip"
-                        
-                        Invoke-WebRequest -Uri $nvmUrl -OutFile $zipPath
-                        Add-Type -AssemblyName System.IO.Compression.FileSystem
-                        [System.IO.Compression.ZipFile]::ExtractToDirectory($zipPath, $nvmDir)
-                        Remove-Item $zipPath
-
-                        # Set environment variables for current user
-                        [Environment]::SetEnvironmentVariable("Path", "$env:Path;$nvmDir", [EnvironmentVariableTarget]::User)
-                        [Environment]::SetEnvironmentVariable("NVM_HOME", $nvmDir, [EnvironmentVariableTarget]::User)
-                        [Environment]::SetEnvironmentVariable("NVM_SYMLINK", $nodeDir, [EnvironmentVariableTarget]::User)
-
-                        # Test NVM
-                        if (Test-Path $nvmExe) {
-                            & $nvmExe --version
-                        } else {
-                            Write-Output "NVM installation failed."
-                        }
-                    '''
+                powershell 'Write-Output "setting up NVM directory"'
+                $nvmDir = "$env:USERPROFILE\\AppData\\Roaming\\nvm"
+                powershell 'Write-Output "checking if NVM directory exists"'
+                if (!(Test-Path $nvmDir)) {
+                    powershell 'Write-Output "NVM directory does not exist, creating it"'
+                    New-Item -ItemType Directory -Force -Path $nvmDir
+                    poweshell 'Write-Output "NVM directory created the whole path of the directory is $nvmDir"'
                 }
+                
+            
             }
         }
     }
