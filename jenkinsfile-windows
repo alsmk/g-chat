@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent {label 'windows-node'}
     stages {
         stage('Setup NVM') {
             steps {
