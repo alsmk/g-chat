@@ -35,13 +35,7 @@ pipeline {
                         Expand-Archive -Path "nvm-setup.zip" -DestinationPath .
                         Write-Output "Printing all the files in the directory"
                         Get-ChildItem
-
-
-                       
-
                     }
-                    
-                 
                     Write-Output "Checking if nvm is installed"
                     if (Test-Path ".\\nvm.exe") {
                         Write-Output "nvm is installed"
@@ -54,11 +48,7 @@ pipeline {
                     }
                     Write-Output "Priniting the nvm version"
                     .\nvm.exe version
-                    
-                    
-
-
-                    
+                    Write-Output "nvm is installed successfully"
                 '''
                 
             
