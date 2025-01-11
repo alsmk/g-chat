@@ -13,6 +13,14 @@ pipeline {
                         New-Item -ItemType Directory -Force -Path $nvmDir
                         Write-Output "NVM directory created the whole path of the directory is $nvmDir"
                     }
+                    Write-Output "moving to NVM directory"
+                    Set-Location $nvmDir
+                    Write-Output "checking if NVM is installed"
+                    if (!(Test-Path ".\\nvm.ps1")) {
+                        Write-Output "NVM is not installed, installing it"
+                        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coreybutler/nvm-windows/master/nvm.ps1" -OutFile ".\\nvm.ps1"
+                        Write-Output "NVM installed"
+                    }
                 '''
                 
             
