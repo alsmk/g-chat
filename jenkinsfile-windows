@@ -41,7 +41,7 @@ pipeline {
                     .\\nvm-setup.exe /dir=".\\" /y
                     Write-Output "NVM installed successfully"
                     Write-Output "Printing the version of nvm"
-                    nvm version
+                    .\\nvm.exe version
 
 
 
