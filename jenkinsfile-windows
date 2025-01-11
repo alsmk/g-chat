@@ -38,13 +38,13 @@ pipeline {
                     }
                     Write-Output "We have nvm-setup.exe in the directory"
                     Write-Output "Installing NVM to the current directory...PLEASE WAIT"
-                    .\\nvm-setup.exe /dir=".\\" /y
+                    
+                    Write-Output "Installing NVM silently to the current directory...PLEASE WAIT"
+                    Start-Process -FilePath ".\\nvm-setup.exe" -ArgumentList "/SILENT", "/DIR=$nvmDir" -Wait
+
                     Write-Output "NVM installed successfully"
-                    Write-Output "Printing the version of nvm"
+                    Write-Output "Printing the nvm version"
                     .\\nvm.exe version
-
-
-
                    
                 '''
                 
