@@ -15,12 +15,24 @@ pipeline {
                     }
                     Write-Output "moving to NVM directory"
                     Set-Location $nvmDir
-                    Write-Output "checking if NVM is installed"
-                    if (!(Test-Path ".\\nvm.ps1")) {
-                        Write-Output "NVM is not installed, installing it"
-                        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coreybutler/nvm-windows/master/nvm.ps1" -OutFile ".\\nvm.ps1"
-                        Write-Output "NVM installed"
-                    }
+                    Write-Output "Make the directory empty"
+                    Remove-Item * -Recurse -Force
+                    Write-Output "Installing nvm in this directory"
+                    Write-Output "Defining the nvm version"
+                    $nvmVersion = "1.2.0"
+                    Write-Output "Downloading the nvm version $nvmVersion"
+                    $nvmUrl = "https://github.com/coreybutler/nvm-windows/releases/download/$nvmVersion/nvm-setup.zip"
+                    Write-Output "Downloading nvm from $nvmUrl and save the zip file in the current directory"
+                    Invoke-WebRequest -Uri $nvmUrl -OutFile "nvm-setup.zip"
+                    Write-Output "Extracting the zip file"
+                    Expand-Archive -Path "nvm-setup.zip" -DestinationPath .
+                    Write-Output "Printing all the files in the directory"
+                    Get-ChildItem
+                    
+                    
+
+
+                    
                 '''
                 
             
