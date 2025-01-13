@@ -1,54 +1,18 @@
-pipeline {
+pipeline{
     agent { label 'windows-node' }
+    environment {
+        INNO_SETUP_URL = "https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe"
+    }
+    stages{
+        stage('Installing depencencies'){
+            steps{
+                bat 'npm install --frozen-lockfile'
+                // pack for windows
 
-    stages {
-        stage('Setup NVM') {
-            steps {
-                powershell 'Write-Output "setting up NVM directory"'
-                powershell '''
-                    $nvmDir = "$env:USERPROFILE\\AppData\\Roaming\\nvm"
-                    Write-Output "checking if NVM directory exists"
-                    if (!(Test-Path $nvmDir)) {
-                        Write-Output "NVM directory does not exist, creating it"
-                        New-Item -ItemType Directory -Force -Path $nvmDir
-                        Write-Output "NVM directory created the whole path of the directory is $nvmDir"
-                    }
-                    Write-Output "moving to NVM directory"
-                    Set-Location $nvmDir
+                bat 'npm run pack:windows'   //"pack:windows": "electron-packager . --platform=win32 --arch=x64 --asar --overwrite --out=./dist/ --icon=./resources/icons/normal/windows.ico",
+                // download inno setup in the windows directory
+                bat 'curl --max-time 30 --retry 3 -L -o ./windows/innosetup.exe $INNO_SETUP_URL'
 
-
-
-                    Write-Output "Checking is there any thing called nvm-setup.exe"
-                    if (Test-Path ".\\nvm-setup.exe") {
-                        Write-Output "nvm-setup.exe exists"
-                    } else {
-                        Write-Output "nvm-setup.exe does not exist "
-                        Write-Output "Downloading nvm-setup.exe"
-                        $nvmVersion = "1.2.0"
-                        Write-Output "Downloading the nvm version $nvmVersion"
-                        $nvmUrl = "https://github.com/coreybutler/nvm-windows/releases/download/$nvmVersion/nvm-setup.zip"
-                        Write-Output "Downloading nvm from $nvmUrl and save to current directory, Please wait......."
-                        Invoke-WebRequest -Uri $nvmUrl -OutFile ".\\nvm-setup.zip"
-                        Write-Output "Extracting the nvm-setup.zip"
-                        Expand-Archive -Path ".\\nvm-setup.zip" -DestinationPath ".\\"
-                        Write-Output "Deleting the nvm-setup.zip"
-                        Remove-Item ".\\nvm-setup.zip"
-                        Write-Output "nvm-setup.exe downloaded and extracted Printing the content of the directory"
-                        Get-ChildItem
-                    }
-                    Write-Output "We have nvm-setup.exe in the directory"
-                    Write-Output "Installing NVM to the current directory...PLEASE WAIT"
-                    
-                    Write-Output "Installing NVM silently to the current directory...PLEASE WAIT"
-                    Start-Process -FilePath ".\\nvm-setup.exe" -ArgumentList "/SILENT", "/DIR=$nvmDir" -Wait
-
-                    Write-Output "NVM installed successfully"
-                    Write-Output "Printing the nvm version"
-                    .\\nvm.exe version
-                   
-                '''
-                
-            
             }
         }
     }
