@@ -13,6 +13,12 @@ pipeline{
                 // download inno setup in the windows directory
                 bat 'curl --max-time 30 --retry 3 -L -o .\\windows\\innosetup.exe https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe'
 
+                // install inno setup
+                bat '.\\windows\\innosetup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL /SP-'
+
+                // create installer
+                bat 'npm run build:windows'
+
             }
         }
     }
