@@ -12,12 +12,13 @@ pipeline{
                 bat 'npm run pack:windows'   //"pack:windows": "electron-packager . --platform=win32 --arch=x64 --asar --overwrite --out=./dist/ --icon=./resources/icons/normal/windows.ico",
                 // download inno setup in the windows directory
                 bat 'curl --max-time 30 --retry 3 -L -o .\\windows\\innosetup.exe https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe'
-
+                // show all the files in the windows directory
+                bat 'dir .\\windows'
                 // install inno setup
-                bat '.\\windows\\innosetup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL /SP-'
+                //bat '.\\windows\\innosetup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL /SP-'
 
                 // create installer
-                bat 'npm run build:windows'
+                // bat 'npm run build:windows'
 
             }
         }
