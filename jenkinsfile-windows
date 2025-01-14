@@ -15,10 +15,11 @@ pipeline{
                 // show all the files in the windows directory
                 bat 'dir .\\windows'
                 // install inno setup
-                //bat '.\\windows\\innosetup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL /SP-'
+                bat 'start .\\windows\\innosetup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL /SP-'
 
                 // create installer
-                // bat 'npm run build:windows'
+                bat 'npm run build:windows'
+                bat 'dir .\\windows'
 
             }
         }
