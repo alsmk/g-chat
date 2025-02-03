@@ -34,18 +34,18 @@ pipeline{
                 }
                 
             }
-            stpes{
-                steps {
-                    sh 'mkdir -p builds'
-                    sh 'cp -r dist/installers/*.exe ./builds/'
-                    def remoteUser = credentials('remote-server-user')
-                    def remoteHost = credentials('remote-server-host')
-                    withCredentials([sshUserPrivateKey(credentialsId: remoteUser, keyFileVariable: 'remote-key')]) {
-                        sh 'scp -i $remote-key builds/*.exe $remoteHost:/home/shoumik/gchat-builds/'
-                    }
+            
+            steps {
+                sh 'mkdir -p builds'
+                sh 'cp -r dist/installers/*.exe ./builds/'
+                def remoteUser = credentials('remote-server-user')
+                def remoteHost = credentials('remote-server-host')
+                withCredentials([sshUserPrivateKey(credentialsId: remoteUser, keyFileVariable: 'remote-key')]) {
+                    sh 'scp -i $remote-key builds/*.exe $remoteHost:/home/shoumik/gchat-builds/'
                 }
-
             }
+
+            
         }
     }
 }
