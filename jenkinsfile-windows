@@ -45,8 +45,8 @@ pipeline{
                 sh 'cp -r dist/installers/*.exe ./builds/'
                 def remoteHost = env.HOST
                 def remoteUser = env.USER
-                def remote-key = env.REMOTE_KEY
-                sh 'scp -i $remote-key builds/*.exe $remoteHost:/home/shoumik/gchat-builds/'
+                def remoteKey = env.REMOTE_KEY
+                sh 'scp -i ${remoteKey} builds/*.exe ${remoteUser}@${remoteHost}:/home/shoumik/gchat-builds/'
                 
                
             }
