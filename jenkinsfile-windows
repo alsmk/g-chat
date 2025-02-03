@@ -42,7 +42,6 @@ pipeline {
 
                         sh """
                             apk add --no-cache openssh-client
-                            ssh-keyscan -H "$REMOTE_HOST" >> ~/.ssh/known_hosts
                             scp -o StrictHostKeyChecking=no -i "$REMOTE_KEY" builds/*.exe "$REMOTE_USER"@"$REMOTE_HOST":/home/shoumik/gchat-builds/
                         """
                     }
