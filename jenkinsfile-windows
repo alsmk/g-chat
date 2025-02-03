@@ -21,6 +21,7 @@ pipeline{
                 bat 'npm run build:windows'
                 bat 'dir .\\windows'
 
+                archiveArtifacts artifacts: 'dist/installers/*.exe', fingerprint: true
             }
         }
     }
