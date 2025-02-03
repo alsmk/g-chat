@@ -1,65 +1,60 @@
-pipeline{
+pipeline {
     agent any
     environment {
         INNO_SETUP_URL = "https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe"
     }
-    stages{
+    stages {
         
-        stage('Installing depencencies'){
+        stage('Installing dependencies') {
             agent { label 'windows-node' }
-            steps{
+            steps {
                 bat 'npm install --frozen-lockfile'
-                // pack for windows
-
-                bat 'npm run pack:windows'   //"pack:windows": "electron-packager . --platform=win32 --arch=x64 --asar --overwrite --out=./dist/ --icon=./resources/icons/normal/windows.ico",
-                // download inno setup in the windows directory
+                bat 'npm run pack:windows'  
                 bat 'curl --max-time 30 --retry 3 -L -o .\\windows\\innosetup.exe %INNO_SETUP_URL%'
-                // show all the files in the windows directory
                 bat 'dir .\\windows'
-                // install inno setup
                 bat 'start .\\windows\\innosetup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL /SP-'
-
-                // create installer
                 bat 'npm run build:windows'
                 bat 'dir .\\windows'
 
+                // Archive artifacts for Jenkins UI (not for agents)
                 archiveArtifacts artifacts: 'dist/installers/*.exe', fingerprint: true
+
+                // Stash artifacts so they can be used in another stage
+                stash name: 'windows-builds', includes: 'dist/installers/*.exe'
             }
         }
-        stage('Uploading installer'){
+
+        stage('Uploading installer') {
             agent {
                 docker {
                     image 'alpine:latest'
                     args '-u root'
                 }
-                
             }
-            
             steps {
-                script{
-                      withCredentials([
+                script {
+                    // Unstash the artifacts before using them
+                    unstash 'windows-builds'
+
+                    withCredentials([
                         string(credentialsId: 'remote-server-user', variable: 'REMOTE_USER'),
                         string(credentialsId: 'remote-server-pass', variable: 'REMOTE_PASSWORD'),
                         string(credentialsId: 'remote-server-host', variable: 'REMOTE_HOST'),
                         sshUserPrivateKey(credentialsId: 'remote-key', keyFileVariable: 'REMOTE_KEY')
-                       ]) {
-                            sh 'mkdir -p builds'
-                            sh 'cp -r dist/installers/*.exe ./builds/'
+                    ]) {
+                        sh 'mkdir -p builds'
+                        sh 'cp -r dist/installers/*.exe ./builds/'
 
-                            def remoteHost = env.REMOTE_HOST  
-                            def remoteUser = env.REMOTE_USER
-                            def remoteKey = env.REMOTE_KEY
+                        def remoteHost = env.REMOTE_HOST  
+                        def remoteUser = env.REMOTE_USER
+                        def remoteKey = env.REMOTE_KEY
 
-                            sh """
-                                scp -i ${remoteKey} builds/*.exe ${remoteUser}@${remoteHost}:/home/shoumik/gchat-builds/
-                            """
-                          }
+                        sh """
+                            scp -i ${remoteKey} builds/*.exe ${remoteUser}@${remoteHost}:/home/shoumik/gchat-builds/
+                        """
+                    }
                 }
-                
-               
             }
-
-            
         }
     }
 }
