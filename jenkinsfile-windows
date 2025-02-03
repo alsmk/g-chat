@@ -35,17 +35,20 @@ pipeline{
                 
             }
             environment {
-                remote-server-user = credentials('remote-server-user')
-                remote-server-host = credentials('remote-server-host')
-                remote-key = credentials('remote-key')
+                USER = credentials('remote-server-user')
+                HOST = credentials('remote-server-host')
+                REMOTE_KEY = credentials('remote-key')
             }
             
             steps {
                 sh 'mkdir -p builds'
                 sh 'cp -r dist/installers/*.exe ./builds/'
+                def remoteHost = env.HOST
+                def remoteUser = env.USER
+                def remote-key = env.REMOTE_KEY
                 sh 'scp -i $remote-key builds/*.exe $remoteHost:/home/shoumik/gchat-builds/'
                 
-                
+               
             }
 
             
