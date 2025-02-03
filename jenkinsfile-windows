@@ -4,7 +4,7 @@ pipeline {
         INNO_SETUP_URL = "https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe"
     }
     stages {
-        
+
         stage('Installing dependencies') {
             agent { label 'windows-node' }
             steps {
@@ -22,7 +22,7 @@ pipeline {
         }
 
         stage('Uploading installer') {
-             agent {
+            agent {
                 docker {
                     image 'ubuntu:latest'  
                     args '-u root'
@@ -30,19 +30,16 @@ pipeline {
             }
             steps {
                 script {
-                    unstash 'windows-builds'
+                    unstash 'windows-builds'  // Restore stashed files
 
                     withCredentials([
                         string(credentialsId: 'remote-server-user', variable: 'REMOTE_USER'),
                         string(credentialsId: 'remote-server-pass', variable: 'REMOTE_PASSWORD'),
-                        string(credentialsId: 'remote-server-host', variable: 'REMOTE_HOST'),
-                        sshUserPrivateKey(credentialsId: 'remote-key', keyFileVariable: 'REMOTE_KEY')
+                        string(credentialsId: 'remote-server-host', variable: 'REMOTE_HOST')
                     ]) {
-                     
-
                         sh """
                             mkdir -p builds
-                            cp /dist/installers/*.exe builds/
+                            cp dist/installers/*.exe ./builds/  // Correct path for the restored files
                             sshpass -p ${REMOTE_PASSWORD} scp -o StrictHostKeyChecking=no builds/*.exe ${REMOTE_USER}@${REMOTE_HOST}:/home/${REMOTE_USER}/gchat-builds/
                         """
                     }
