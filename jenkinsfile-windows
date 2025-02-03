@@ -41,8 +41,8 @@ pipeline {
                      
 
                         sh """
-                            apk add --no-cache openssh-client
-                            scp -o StrictHostKeyChecking=no -i "$REMOTE_KEY" builds/*.exe "$REMOTE_USER"@"$REMOTE_HOST":/home/shoumik/gchat-builds/
+                            sh 'apk add --no-cache sshpass'
+                            sshpass -p ${REMOTE_PASSWORD} scp -o StrictHostKeyChecking=no builds/*.exe ${REMOTE_USER}@${REMOTE_HOST}:/home/${REMOTE_USER}/gchat-builds/
                         """
                     }
                 }
