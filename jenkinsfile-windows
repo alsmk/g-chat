@@ -9,7 +9,7 @@ pipeline {
             agent { label 'windows-node' }
             steps {
                 bat 'npm install --frozen-lockfile'
-                bat 'npm run pack:windows'  
+                bat 'npm run pack:windows'
                 bat 'curl --max-time 30 --retry 3 -L -o .\\windows\\innosetup.exe %INNO_SETUP_URL%'
                 bat 'dir .\\windows'
                 bat 'start .\\windows\\innosetup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL /SP-'
@@ -30,7 +30,7 @@ pipeline {
             }
             steps {
                 script {
-                    unstash 'windows-builds'  // Retrieve stashed artifacts
+                    unstash 'windows-builds'
 
                     withCredentials([
                         string(credentialsId: 'remote-server-user', variable: 'REMOTE_USER'),
@@ -38,14 +38,12 @@ pipeline {
                         string(credentialsId: 'remote-server-host', variable: 'REMOTE_HOST'),
                         sshUserPrivateKey(credentialsId: 'remote-key', keyFileVariable: 'REMOTE_KEY')
                     ]) {
-                        // Debugging output to ensure correct value of REMOTE_HOST
-                        sh "echo 'Remote Host: $REMOTE_HOST'"
+                     
 
-                        sh 'apk add --no-cache openssh-client'  // Install scp in Alpine
-
-                        // Ensure there are no extra spaces or incorrect characters
                         sh """
-                            scp -i "$REMOTE_KEY" builds/*.exe "$REMOTE_USER"@"$REMOTE_HOST":/home/shoumik/gchat-builds/
+                            apk add --no-cache openssh-client
+                            ssh-keyscan -H "$REMOTE_HOST" >> ~/.ssh/known_hosts
+                            scp -o StrictHostKeyChecking=no -i "$REMOTE_KEY" builds/*.exe "$REMOTE_USER"@"$REMOTE_HOST":/home/shoumik/gchat-builds/
                         """
                     }
                 }
