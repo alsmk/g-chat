@@ -1,10 +1,12 @@
 pipeline{
-    agent { label 'windows-node' }
+    agent any
     environment {
         INNO_SETUP_URL = "https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe"
     }
     stages{
+        
         stage('Installing depencencies'){
+            agent { label 'windows-node' }
             steps{
                 bat 'npm install --frozen-lockfile'
                 // pack for windows
@@ -22,6 +24,27 @@ pipeline{
                 bat 'dir .\\windows'
 
                 archiveArtifacts artifacts: 'dist/installers/*.exe', fingerprint: true
+            }
+        }
+        stage('Uploading installer'){
+            agent {
+                docker {
+                    image 'alpine:latest'
+                    args '-u root'
+                }
+                
+            }
+            stpes{
+                steps {
+                    sh 'mkdir -p builds'
+                    sh 'cp -r dist/installers/*.exe ./builds/'
+                    def remoteUser = credentials('remote-server-user')
+                    def remoteHost = credentials('remote-server-host')
+                    withCredentials([sshUserPrivateKey(credentialsId: remoteUser, keyFileVariable: 'remote-key')]) {
+                        sh 'scp -i $remote-key builds/*.exe $remoteHost:/home/shoumik/gchat-builds/'
+                    }
+                }
+
             }
         }
     }
