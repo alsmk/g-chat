@@ -38,7 +38,12 @@ pipeline {
                         string(credentialsId: 'remote-server-host', variable: 'REMOTE_HOST'),
                         sshUserPrivateKey(credentialsId: 'remote-key', keyFileVariable: 'REMOTE_KEY')
                     ]) {
+                        // Debugging output to ensure correct value of REMOTE_HOST
+                        sh "echo 'Remote Host: $REMOTE_HOST'"
+
                         sh 'apk add --no-cache openssh-client'  // Install scp in Alpine
+
+                        // Ensure there are no extra spaces or incorrect characters
                         sh """
                             scp -i "$REMOTE_KEY" builds/*.exe "$REMOTE_USER"@"$REMOTE_HOST":/home/shoumik/gchat-builds/
                         """
