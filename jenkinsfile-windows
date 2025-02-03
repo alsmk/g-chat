@@ -22,9 +22,9 @@ pipeline {
         }
 
         stage('Uploading installer') {
-            agent {
+             agent {
                 docker {
-                    image 'alpine:latest'
+                    image 'ubuntu:latest'  
                     args '-u root'
                 }
             }
@@ -41,7 +41,8 @@ pipeline {
                      
 
                         sh """
-                            sh 'apk add --no-cache sshpass'
+                            mkdir -p builds
+                            cp /dist/installers/*.exe builds/
                             sshpass -p ${REMOTE_PASSWORD} scp -o StrictHostKeyChecking=no builds/*.exe ${REMOTE_USER}@${REMOTE_HOST}:/home/${REMOTE_USER}/gchat-builds/
                         """
                     }
