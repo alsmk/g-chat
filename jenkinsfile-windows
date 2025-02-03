@@ -34,19 +34,27 @@ pipeline{
                 }
                 
             }
-            environment {
-                USER = credentials('remote-server-user')
-                HOST = credentials('remote-server-host')
-                REMOTE_KEY = credentials('remote-key')
-            }
             
             steps {
-                sh 'mkdir -p builds'
-                sh 'cp -r dist/installers/*.exe ./builds/'
-                def remoteHost = env.HOST
-                def remoteUser = env.USER
-                def remoteKey = env.REMOTE_KEY
-                sh 'scp -i ${remoteKey} builds/*.exe ${remoteUser}@${remoteHost}:/home/shoumik/gchat-builds/'
+                script{
+                      withCredentials([
+                        string(credentialsId: 'remote-server-user', variable: 'REMOTE_USER'),
+                        string(credentialsId: 'remote-server-pass', variable: 'REMOTE_PASSWORD'),
+                        string(credentialsId: 'remote-server-host', variable: 'REMOTE_HOST'),
+                        sshUserPrivateKey(credentialsId: 'remote-key', keyFileVariable: 'REMOTE_KEY')
+                       ]) {
+                            sh 'mkdir -p builds'
+                            sh 'cp -r dist/installers/*.exe ./builds/'
+
+                            def remoteHost = env.REMOTE_HOST  
+                            def remoteUser = env.REMOTE_USER
+                            def remoteKey = env.REMOTE_KEY
+
+                            sh """
+                                scp -i ${remoteKey} builds/*.exe ${remoteUser}@${remoteHost}:/home/shoumik/gchat-builds/
+                            """
+                          }
+                }
                 
                
             }
